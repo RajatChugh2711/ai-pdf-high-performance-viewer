@@ -11,8 +11,8 @@ import {
 } from '../features/chat/chatSlice';
 import { mockAIQuery } from '../lib/mockBackend';
 
-const TOKEN_INTERVAL_MS = 20;
-const CHARS_PER_TICK = 3;
+const TOKEN_INTERVAL_MS = 24; // ~60 fps feel
+const CHARS_PER_TICK = 2;    // 2 chars × 60fps ≈ 120 chars/sec — smooth, readable
 
 export function useStreamingChat() {
   const dispatch = useAppDispatch();

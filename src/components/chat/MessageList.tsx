@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useAppSelector } from '../../app/hooks';
 import {
   selectConversationByDocId,
@@ -7,7 +7,6 @@ import {
 } from '../../features/chat/chatSelectors';
 import { MessageItem } from './MessageItem';
 import type { Message } from '../../types';
-import { v4 as uuidv4 } from 'uuid';
 
 interface MessageListProps {
   docId: string;
@@ -52,14 +51,18 @@ export function MessageList({ docId }: MessageListProps) {
 
   const isThisDocStreaming = isStreaming && streamingState.docId === docId;
 
-  // Auto-scroll to bottom on new messages or streaming content
-  const scrollToBottom = useCallback(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, []);
-
+  // Smooth-scroll when a new message is added to the conversation
   useEffect(() => {
-    scrollToBottom();
-  }, [messages.length, streamingState.content, scrollToBottom]);
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages.length]);
+
+  // During streaming, keep the bottom pinned with instant scroll so that the
+  // hundreds of token-tick renders don't queue up competing smooth animations.
+  useEffect(() => {
+    if (isThisDocStreaming) {
+      bottomRef.current?.scrollIntoView({ behavior: 'instant' });
+    }
+  }, [isThisDocStreaming, streamingState.content]);
 
   if (messages.length === 0 && !isThisDocStreaming) {
     return (
@@ -88,7 +91,7 @@ export function MessageList({ docId }: MessageListProps) {
 
       {isThisDocStreaming && (
         streamingState.content
-          ? <StreamingBubble key={uuidv4()} content={streamingState.content} />
+          ? <StreamingBubble key="streaming-bubble" content={streamingState.content} />
           : <LoadingDots />
       )}
 
