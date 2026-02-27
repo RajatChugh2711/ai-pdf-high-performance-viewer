@@ -41,7 +41,7 @@ export function ChatInput({ docId }: ChatInputProps) {
 
   return (
     <div className="border-t border-gray-800 bg-gray-900 px-4 py-3">
-      <div className="flex items-end gap-3">
+      <div className="flex items-center gap-3">
         <div className="flex-1 relative">
           <textarea
             ref={textareaRef}
@@ -60,7 +60,7 @@ export function ChatInput({ docId }: ChatInputProps) {
         {isStreaming ? (
           <button
             onClick={abort}
-            className="p-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white transition flex-shrink-0"
+            className="p-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white transition shrink-0"
             title="Stop generating"
           >
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -72,7 +72,7 @@ export function ChatInput({ docId }: ChatInputProps) {
             onClick={() => { void handleSend(); }}
             disabled={!input.trim()}
             className="p-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white transition
-              flex-shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+              shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
             title="Send message (Enter)"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
