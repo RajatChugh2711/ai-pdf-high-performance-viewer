@@ -27,6 +27,21 @@ function SuspenseFallback({ label }: { label: string }) {
   );
 }
 
+function RestoringPlaceholder() {
+  return (
+    <div className="flex-1 flex items-center justify-center bg-gray-950">
+      <div className="text-center">
+        <svg className="animate-spin h-8 w-8 text-purple-400 mx-auto mb-3" fill="none" viewBox="0 0 24 24">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+        </svg>
+        <p className="text-gray-300 text-sm font-medium">Restoring document…</p>
+        <p className="text-gray-500 text-xs mt-1">Retrieving your file from local storage</p>
+      </div>
+    </div>
+  );
+}
+
 function EmptyState() {
   return (
     <div className="flex-1 flex items-center justify-center p-8">
@@ -62,16 +77,20 @@ export function DashboardPage() {
       {/* Main area */}
       {activeDocument ? (
         <div className="flex-1 flex overflow-hidden min-w-0">
-          {/* PDF Viewer */}
+          {/* PDF Viewer — withheld until objectUrl is available */}
           <div className="flex-1 overflow-hidden min-w-0 border-r border-gray-800">
-            <ErrorBoundary label="PDFViewer">
-              <Suspense fallback={<SuspenseFallback label="PDF viewer" />}>
-                <PDFViewer
-                  objectUrl={activeDocument.objectUrl}
-                  pageCount={activeDocument.pageCount || 1}
-                />
-              </Suspense>
-            </ErrorBoundary>
+            {activeDocument.status === 'restoring' ? (
+              <RestoringPlaceholder />
+            ) : (
+              <ErrorBoundary label="PDFViewer">
+                <Suspense fallback={<SuspenseFallback label="PDF viewer" />}>
+                  <PDFViewer
+                    objectUrl={activeDocument.objectUrl}
+                    pageCount={activeDocument.pageCount || 1}
+                  />
+                </Suspense>
+              </ErrorBoundary>
+            )}
           </div>
 
           {/* Chat Panel */}

@@ -21,26 +21,40 @@ const markdownComponents: Components = {
   code(props) {
     const { className, children, ...rest } = props;
     const match = /language-(\w+)/.exec(className ?? '');
-    const isInline = !match;
     const content = String(children).replace(/\n$/, '');
+    // Inline code is single-line and has no language class.
+    // Fenced blocks always contain newlines even when no language is specified.
+    const isInline = !match && !content.includes('\n');
 
     if (isInline) {
       return (
-        <code className="bg-gray-800 text-indigo-300 px-1 py-0.5 rounded text-sm font-mono" {...rest}>
+        <code className="bg-gray-800 text-indigo-300 px-1 py-0.5 rounded text-sm font-mono break-all" {...rest}>
           {children}
         </code>
       );
     }
 
+    if (match) {
+      // Fenced block with language — use syntax highlighting
+      return (
+        <div className="overflow-x-auto my-2 rounded-lg">
+          <SyntaxHighlighter
+            style={oneDark}
+            language={match[1]}
+            PreTag="div"
+            className="rounded-lg! m-0! text-sm"
+          >
+            {content}
+          </SyntaxHighlighter>
+        </div>
+      );
+    }
+
+    // Fenced block without a language specifier — plain styled pre block
     return (
-      <SyntaxHighlighter
-        style={oneDark}
-        language={match[1]}
-        PreTag="div"
-        className="rounded-lg text-sm my-2"
-      >
-        {content}
-      </SyntaxHighlighter>
+      <pre className="overflow-x-auto w-62.5 my-2 bg-gray-900 rounded-lg p-3 text-sm text-gray-300 font-mono">
+        <code {...rest}>{content}</code>
+      </pre>
     );
   },
   p({ children }) {
@@ -87,7 +101,7 @@ export const MessageItem = memo(function MessageItem({
         </div>
       )}
 
-      <div className={`max-w-[80%] ${isUser ? 'items-end' : 'items-start'} flex flex-col`}>
+      <div className={`max-w-[80%] min-w-0 ${isUser ? 'items-end' : 'items-start'} flex flex-col`}>
         {/* Bubble */}
         <div
           className={`

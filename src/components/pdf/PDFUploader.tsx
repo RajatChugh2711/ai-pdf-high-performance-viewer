@@ -4,6 +4,7 @@ import { useAppDispatch } from '../../app/hooks';
 import { addDocument, fileMap } from '../../features/documents/documentsSlice';
 import { usePDFWorker } from '../../hooks/usePDFWorker';
 import { addNotification } from '../../features/ui/uiSlice';
+import { storeFile } from '../../lib/fileStorage';
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 const ACCEPTED_TYPE = 'application/pdf';
@@ -44,8 +45,10 @@ export function PDFUploader({ onUploaded }: PDFUploaderProps) {
         const id = uuidv4();
         const objectUrl = URL.createObjectURL(file);
 
-        // Store file outside Redux
+        // Store raw File in module map (for current session) and in IndexedDB
+        // (for restoration after page refresh).
         fileMap.set(id, file);
+        void storeFile(id, file);
 
         dispatch(addDocument({ id, name: file.name, size: file.size, objectUrl }));
         void parseFile(id, file);

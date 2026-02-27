@@ -42,7 +42,8 @@ export type DocumentStatus =
   | 'uploading'
   | 'processing'
   | 'ready'
-  | 'error';
+  | 'error'
+  | 'restoring';
 
 export interface DocumentMetadata {
   // Core identity

@@ -8,6 +8,7 @@ import {
   setActiveDocument,
 } from '../../features/documents/documentsSlice';
 import { PDFUploader } from './PDFUploader';
+import { deleteFile } from '../../lib/fileStorage';
 import type { DocumentRecord } from '../../types';
 
 function formatSize(bytes: number): string {
@@ -23,7 +24,6 @@ function StatusBadge({
   status: DocumentRecord['status'];
   isCorrupted: boolean;
 }) {
-  // Corrupted gets its own distinct badge overriding the generic "Error" label
   if (status === 'error' && isCorrupted) {
     return (
       <span className="text-xs px-1.5 py-0.5 rounded font-medium bg-orange-900/40 text-orange-300 flex items-center gap-1">
@@ -37,10 +37,11 @@ function StatusBadge({
   }
 
   const config = {
-    uploading: { label: 'Uploading', cls: 'bg-blue-900/40 text-blue-300' },
+    uploading:  { label: 'Uploading',  cls: 'bg-blue-900/40 text-blue-300' },
     processing: { label: 'Processing', cls: 'bg-yellow-900/40 text-yellow-300' },
-    ready: { label: 'Ready', cls: 'bg-green-900/40 text-green-300' },
-    error: { label: 'Error', cls: 'bg-red-900/40 text-red-300' },
+    ready:      { label: 'Ready',      cls: 'bg-green-900/40 text-green-300' },
+    error:      { label: 'Error',      cls: 'bg-red-900/40 text-red-300' },
+    restoring:  { label: 'Restoring…', cls: 'bg-purple-900/40 text-purple-300' },
   } as const;
 
   const { label, cls } = config[status];
@@ -58,19 +59,22 @@ export function DocumentSidebar() {
 
   function handleRemove(e: React.MouseEvent, id: string) {
     e.stopPropagation();
+    // Delete the binary from IndexedDB before removing the record from Redux
+    // so the file doesn't linger in storage after the user removes it from the UI.
+    void deleteFile(id);
     dispatch(removeDocument(id));
   }
 
   return (
     <div className="flex flex-col h-full bg-gray-900 border-r border-gray-800">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-gray-800 flex-shrink-0">
+      <div className="px-4 py-3 border-b border-gray-800 shrink-0">
         <h2 className="text-sm font-semibold text-gray-200">Documents</h2>
         <p className="text-xs text-gray-500 mt-0.5">{documents.length} file{documents.length !== 1 ? 's' : ''}</p>
       </div>
 
       {/* Upload area */}
-      <div className="px-3 py-3 border-b border-gray-800 flex-shrink-0">
+      <div className="px-3 py-3 border-b border-gray-800 shrink-0">
         <PDFUploader />
       </div>
 
@@ -95,14 +99,21 @@ export function DocumentSidebar() {
                   `}
                 >
                   {/* PDF icon */}
-                  <div className={`w-8 h-8 rounded flex-shrink-0 flex items-center justify-center mt-0.5
+                  <div className={`w-8 h-8 rounded shrink-0 flex items-center justify-center mt-0.5
                     ${activeId === doc.id ? 'bg-indigo-700' : 'bg-gray-800'}`}>
-                    <svg className="w-4 h-4 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd"
-                        d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
+                    {doc.status === 'restoring' ? (
+                      <svg className="w-4 h-4 text-purple-400 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                    ) : (
+                      <svg className="w-4 h-4 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd"
+                          d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    )}
                   </div>
 
                   {/* Info */}
@@ -112,7 +123,7 @@ export function DocumentSidebar() {
                       <StatusBadge status={doc.status} isCorrupted={doc.isCorrupted} />
                       <span className="text-xs text-gray-500">{formatSize(doc.size)}</span>
                       {doc.pageCount > 0 && (
-                        <span className="text-xs text-gray-500">{doc.pageCount}p</span>
+                        <span className="text-xs text-gray-500">{doc.pageCount}{doc?.pageCount > 1 ? ' pages' : ' page'}</span>
                       )}
                     </div>
                     {doc.error && (
@@ -123,7 +134,7 @@ export function DocumentSidebar() {
                   {/* Remove button */}
                   <button
                     onClick={(e) => handleRemove(e, doc.id)}
-                    className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition p-1 rounded
+                    className="shrink-0 opacity-0 group-hover:opacity-100 transition p-1 rounded
                       hover:bg-gray-700 text-gray-500 hover:text-gray-300"
                     title="Remove document"
                   >

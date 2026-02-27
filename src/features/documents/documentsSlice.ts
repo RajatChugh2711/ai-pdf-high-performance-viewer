@@ -69,6 +69,26 @@ const documentsSlice = createSlice({
     setActiveDocument(state, action: PayloadAction<string | null>) {
       state.activeDocumentId = action.payload;
     },
+    // Called after IndexedDB lookup succeeds during session restore
+    updateObjectUrl(
+      state,
+      action: PayloadAction<{ id: string; objectUrl: string }>,
+    ) {
+      const doc = state.files[action.payload.id];
+      if (doc) {
+        doc.objectUrl = action.payload.objectUrl;
+        doc.status = 'ready';
+      }
+    },
+    // Called when IndexedDB lookup finds no file (e.g. storage was cleared)
+    markDocumentUnavailable(state, action: PayloadAction<string>) {
+      const doc = state.files[action.payload];
+      if (doc) {
+        doc.status = 'error';
+        doc.error = 'File no longer available. Please re-upload.';
+        doc.objectUrl = '';
+      }
+    },
     removeDocument(state, action: PayloadAction<string>) {
       const doc = state.files[action.payload];
       if (doc) {
@@ -90,6 +110,8 @@ export const {
   updateDocumentMetadata,
   setDocumentError,
   setActiveDocument,
+  updateObjectUrl,
+  markDocumentUnavailable,
   removeDocument,
 } = documentsSlice.actions;
 

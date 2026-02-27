@@ -91,6 +91,10 @@ export const PDFViewer = forwardRef<PDFViewerHandle, PDFViewerProps>(
 
     // Load PDF document
     useEffect(() => {
+      // Empty objectUrl means the document is still being restored from IndexedDB.
+      // Don't attempt to load — DashboardPage shows a placeholder for this state.
+      if (!objectUrl) return;
+
       let cancelled = false;
       setIsLoading(true);
       setLoadError(null);
