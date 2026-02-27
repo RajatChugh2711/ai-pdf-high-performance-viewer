@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAppSelector } from '../../app/hooks';
 import {
   selectConversationByDocId,
@@ -43,26 +43,65 @@ function LoadingDots() {
   );
 }
 
+// How far from the bottom (px) the user must be before we consider them "scrolled up"
+const SCROLL_THRESHOLD = 80;
+
 export function MessageList({ docId }: MessageListProps) {
   const messages = useAppSelector(selectConversationByDocId(docId));
   const isStreaming = useAppSelector(selectIsStreaming);
   const streamingState = useAppSelector(selectStreamingState);
-  const bottomRef = useRef<HTMLDivElement>(null);
+
+  const scrollRef = useRef<HTMLDivElement>(null);
+  // Ref (not state) — updates must never trigger a re-render
+  const userScrolledUpRef = useRef(false);
+  // Show a "jump to bottom" pill when user has scrolled up during streaming
+  const [showJumpBtn, setShowJumpBtn] = useState(false);
 
   const isThisDocStreaming = isStreaming && streamingState.docId === docId;
 
-  // Smooth-scroll when a new message is added to the conversation
+  function isNearBottom(): boolean {
+    const el = scrollRef.current;
+    if (!el) return true;
+    return el.scrollHeight - el.scrollTop - el.clientHeight <= SCROLL_THRESHOLD;
+  }
+
+  function scrollToBottom(behavior: ScrollBehavior = 'smooth') {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior });
+  }
+
+  // Called on every scroll event in the container
+  function handleScroll() {
+    const atBottom = isNearBottom();
+    userScrolledUpRef.current = !atBottom;
+    // Only show the jump button when actively streaming and user scrolled away
+    setShowJumpBtn(isThisDocStreaming && !atBottom);
+  }
+
+  // New completed message added → always jump to bottom and reset state
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    userScrolledUpRef.current = false;
+    setShowJumpBtn(false);
+    scrollToBottom('smooth');
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages.length]);
 
-  // During streaming, keep the bottom pinned with instant scroll so that the
-  // hundreds of token-tick renders don't queue up competing smooth animations.
+  // During streaming — only scroll if the user hasn't deliberately scrolled up
   useEffect(() => {
-    if (isThisDocStreaming) {
-      bottomRef.current?.scrollIntoView({ behavior: 'instant' });
+    if (isThisDocStreaming && !userScrolledUpRef.current) {
+      scrollToBottom('instant');
     }
-  }, [isThisDocStreaming, streamingState.content]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [streamingState.content]);
+
+  // Streaming ended → hide jump button
+  useEffect(() => {
+    if (!isThisDocStreaming) {
+      setShowJumpBtn(false);
+      userScrolledUpRef.current = false;
+    }
+  }, [isThisDocStreaming]);
 
   if (messages.length === 0 && !isThisDocStreaming) {
     return (
@@ -84,18 +123,45 @@ export function MessageList({ docId }: MessageListProps) {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto py-4 scroll-smooth">
-      {messages.map((msg) => (
-        <MessageItem key={msg.id} message={msg} />
-      ))}
+    <div className="flex-1 relative overflow-hidden">
+      {/* Scrollable message area */}
+      <div
+        ref={scrollRef}
+        onScroll={handleScroll}
+        className="h-full overflow-y-auto py-4"
+      >
+        {messages.map((msg) => (
+          <MessageItem key={msg.id} message={msg} />
+        ))}
 
-      {isThisDocStreaming && (
-        streamingState.content
-          ? <StreamingBubble key="streaming-bubble" content={streamingState.content} />
-          : <LoadingDots />
+        {isThisDocStreaming && (
+          streamingState.content
+            ? <StreamingBubble key="streaming-bubble" content={streamingState.content} />
+            : <LoadingDots />
+        )}
+
+        {/* Scroll anchor — no longer used for scrollIntoView, kept for layout */}
+        <div className="h-1" />
+      </div>
+
+      {/* Jump-to-bottom pill — appears when user scrolls up during streaming */}
+      {showJumpBtn && (
+        <button
+          onClick={() => {
+            userScrolledUpRef.current = false;
+            setShowJumpBtn(false);
+            scrollToBottom('smooth');
+          }}
+          className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5
+            bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium
+            px-3 py-1.5 rounded-full shadow-lg transition-colors"
+        >
+          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+          New message
+        </button>
       )}
-
-      <div ref={bottomRef} />
     </div>
   );
 }

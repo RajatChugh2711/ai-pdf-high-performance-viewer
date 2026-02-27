@@ -28,7 +28,7 @@ const markdownComponents: Components = {
 
     if (isInline) {
       return (
-        <code className="bg-gray-800 text-indigo-300 px-1 py-0.5 rounded text-sm font-mono break-all" {...rest}>
+        <code className="bg-gray-800 text-indigo-300 w-62.5 px-1 py-0.5 rounded text-sm font-mono break-all" {...rest}>
           {children}
         </code>
       );
@@ -37,7 +37,7 @@ const markdownComponents: Components = {
     if (match) {
       // Fenced block with language — use syntax highlighting
       return (
-        <div className="overflow-x-auto my-2 rounded-lg">
+        <div className="overflow-x-auto my-2 w-62.5 rounded-lg">
           <SyntaxHighlighter
             style={oneDark}
             language={match[1]}
@@ -53,7 +53,7 @@ const markdownComponents: Components = {
     // Fenced block without a language specifier — plain styled pre block
     return (
       <pre className="overflow-x-auto w-62.5 my-2 bg-gray-900 rounded-lg p-3 text-sm text-gray-300 font-mono">
-        <code {...rest}>{content}</code>
+        <code className='w-62.5' {...rest}>{content}</code>
       </pre>
     );
   },
