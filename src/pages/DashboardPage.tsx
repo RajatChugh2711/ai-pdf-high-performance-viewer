@@ -69,7 +69,7 @@ export function DashboardPage() {
     <div className="flex h-full overflow-hidden">
       {/* Sidebar */}
       {sidebarOpen && (
-        <div className="w-72 flex-shrink-0 overflow-hidden">
+        <div className="w-72 shrink-0 overflow-hidden">
           <DocumentSidebar />
         </div>
       )}
@@ -94,7 +94,7 @@ export function DashboardPage() {
           </div>
 
           {/* Chat Panel */}
-          <div className="w-96 flex-shrink-0 flex flex-col overflow-hidden">
+          <div className="w-96 shrink-0 flex flex-col overflow-hidden">
             <ErrorBoundary label="ChatPanel">
               <Suspense fallback={<SuspenseFallback label="chat" />}>
                 <ChatPanel document={activeDocument} />

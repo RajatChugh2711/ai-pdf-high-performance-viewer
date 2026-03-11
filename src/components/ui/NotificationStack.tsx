@@ -56,11 +56,11 @@ function NotificationItem({ id, type, message, duration = 4000 }: {
       className={`flex items-start gap-2 px-4 py-3 rounded-lg border backdrop-blur-sm shadow-lg
         text-sm max-w-sm ${COLOR_MAP[type]}`}
     >
-      <span className="flex-shrink-0 mt-0.5">{ICON_MAP[type]}</span>
+      <span className="shrink-0 mt-0.5">{ICON_MAP[type]}</span>
       <p className="flex-1">{message}</p>
       <button
         onClick={() => dispatch(removeNotification(id))}
-        className="flex-shrink-0 opacity-60 hover:opacity-100 transition"
+        className="shrink-0 opacity-60 hover:opacity-100 transition"
       >
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}

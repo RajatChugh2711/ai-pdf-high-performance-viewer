@@ -1,14 +1,15 @@
+import { useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import {
   selectActiveDocumentId,
   selectAllDocuments,
 } from '../../features/documents/documentsSelectors';
 import {
-  removeDocument,
+  deleteDocument,
   setActiveDocument,
+  updateDocumentName,
 } from '../../features/documents/documentsSlice';
 import { PDFUploader } from './PDFUploader';
-import { deleteFile } from '../../lib/fileStorage';
 import type { DocumentRecord } from '../../types';
 
 function formatSize(bytes: number): string {
@@ -56,13 +57,26 @@ export function DocumentSidebar() {
   const dispatch = useAppDispatch();
   const documents = useAppSelector(selectAllDocuments);
   const activeId = useAppSelector(selectActiveDocumentId);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
 
   function handleRemove(e: React.MouseEvent, id: string) {
     e.stopPropagation();
-    // Delete the binary from IndexedDB before removing the record from Redux
-    // so the file doesn't linger in storage after the user removes it from the UI.
-    void deleteFile(id);
-    dispatch(removeDocument(id));
+    dispatch(deleteDocument(id));
+  }
+
+  function handleRename(e: React.MouseEvent, doc: DocumentRecord) {
+    e.stopPropagation();
+    setEditingId(doc.id);
+    setEditName(doc.name);
+  }
+
+  function submitRename(e: React.FormEvent) {
+    e.preventDefault();
+    if (editingId && editName.trim()) {
+      dispatch(updateDocumentName(editingId, editName.trim()));
+    }
+    setEditingId(null);
   }
 
   return (
@@ -118,7 +132,19 @@ export function DocumentSidebar() {
 
                   {/* Info */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-gray-200 truncate font-medium">{doc.name}</p>
+                    {editingId === doc.id ? (
+                      <form onSubmit={submitRename} onClick={(e) => e.stopPropagation()}>
+                        <input
+                          autoFocus
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          onBlur={() => setEditingId(null)}
+                          className="bg-gray-800 text-white text-sm px-1 py-0.5 w-full rounded border border-indigo-500 outline-none"
+                        />
+                      </form>
+                    ) : (
+                      <p className="text-sm text-gray-200 truncate font-medium">{doc.name}</p>
+                    )}
                     <div className="flex items-center gap-2 mt-1">
                       <StatusBadge status={doc.status} isCorrupted={doc.isCorrupted} />
                       <span className="text-xs text-gray-500">{formatSize(doc.size)}</span>
@@ -131,18 +157,29 @@ export function DocumentSidebar() {
                     )}
                   </div>
 
-                  {/* Remove button */}
-                  <button
-                    onClick={(e) => handleRemove(e, doc.id)}
-                    className="shrink-0 opacity-0 group-hover:opacity-100 transition p-1 rounded
-                      hover:bg-gray-700 text-gray-500 hover:text-gray-300"
-                    title="Remove document"
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
+                  {/* Actions */}
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
+                    <button
+                      onClick={(e) => handleRename(e, doc)}
+                      className="p-1 rounded hover:bg-gray-700 text-gray-500 hover:text-gray-300"
+                      title="Rename document"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                          d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={(e) => handleRemove(e, doc.id)}
+                      className="p-1 rounded hover:bg-gray-700 text-gray-500 hover:text-gray-300"
+                      title="Remove document"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
                 </button>
               </li>
             ))}

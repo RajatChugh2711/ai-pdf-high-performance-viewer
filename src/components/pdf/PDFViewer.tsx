@@ -248,7 +248,7 @@ export const PDFViewer = forwardRef<PDFViewerHandle, PDFViewerProps>(
     return (
       <div className="flex flex-col h-full bg-gray-950">
         {/* Toolbar */}
-        <div className="flex items-center gap-3 px-4 py-2 border-b border-gray-800 bg-gray-900 flex-shrink-0">
+        <div className="flex items-center gap-3 px-4 py-2 border-b border-gray-800 bg-gray-900 shrink-0">
           {/* Navigation */}
           <div className="flex items-center gap-1">
             <button

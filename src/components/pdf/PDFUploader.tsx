@@ -1,10 +1,7 @@
 import { useCallback, useRef, useState } from 'react';
-import { v4 as uuidv4 } from 'uuid';
 import { useAppDispatch } from '../../app/hooks';
-import { addDocument, fileMap } from '../../features/documents/documentsSlice';
-import { usePDFWorker } from '../../hooks/usePDFWorker';
+import { uploadDocument } from '../../features/documents/documentsSlice';
 import { addNotification } from '../../features/ui/uiSlice';
-import { storeFile } from '../../lib/fileStorage';
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 const ACCEPTED_TYPE = 'application/pdf';
@@ -15,7 +12,6 @@ interface PDFUploaderProps {
 
 export function PDFUploader({ onUploaded }: PDFUploaderProps) {
   const dispatch = useAppDispatch();
-  const { parseFile } = usePDFWorker();
   const [isDragging, setIsDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -42,23 +38,14 @@ export function PDFUploader({ onUploaded }: PDFUploaderProps) {
           continue;
         }
 
-        const id = uuidv4();
-        const objectUrl = URL.createObjectURL(file);
-
-        // Store raw File in module map (for current session) and in IndexedDB
-        // (for restoration after page refresh).
-        fileMap.set(id, file);
-        void storeFile(id, file);
-
-        dispatch(addDocument({ id, name: file.name, size: file.size, objectUrl }));
-        void parseFile(id, file);
+        dispatch(uploadDocument(file));
       }
 
       if (!hasError && fileArray.length > 0) {
         onUploaded?.();
       }
     },
-    [dispatch, parseFile, onUploaded],
+    [dispatch, onUploaded],
   );
 
   function handleDragEnter(e: React.DragEvent) {

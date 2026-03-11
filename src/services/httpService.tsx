@@ -6,10 +6,9 @@ import type {
   InternalAxiosRequestConfig,
 } from "axios";
 import toast from "react-hot-toast";
+import { getTokens, storeTokens } from "@/lib/tokenManager";
 
 const baseUrl: string = import.meta.env.VITE_APP_BASE_URL;
-
-let jwtToken: string | null = localStorage.getItem("user");
 
 const httpService = (): AxiosInstance => {
   const instance: AxiosInstance = axios.create({
@@ -20,8 +19,9 @@ const httpService = (): AxiosInstance => {
   // Request interceptor
   instance.interceptors.request.use(
     (config: InternalAxiosRequestConfig) => {
-      if (jwtToken) {
-        config.headers.Authorization = `Bearer ${jwtToken}`;
+      const tokens = getTokens();
+      if (tokens?.token) {
+        config.headers.Authorization = `Bearer ${tokens.token}`;
       }
       return config;
     },
@@ -34,6 +34,7 @@ const httpService = (): AxiosInstance => {
     localStorage.clear();
     window.location.href = "/login";
   };
+
 
   // Response interceptor
   instance.interceptors.response.use(
@@ -89,6 +90,6 @@ const httpService = (): AxiosInstance => {
 export default httpService();
 
 export const setJwtToken = (token: string): void => {
-  localStorage.setItem("user", token);
-  jwtToken = token;
+  // Use same key as tokenManager
+  storeTokens(token, token); // refreshToken used as same for simplicity here as per previous logic
 };

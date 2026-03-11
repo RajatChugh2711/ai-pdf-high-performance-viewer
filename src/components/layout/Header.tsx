@@ -8,7 +8,7 @@ export function Header() {
   const user = useAppSelector(selectUser);
 
   return (
-    <header className="flex items-center justify-between px-4 py-2.5 bg-gray-900 border-b border-gray-800 flex-shrink-0 z-10">
+    <header className="flex items-center justify-between px-4 py-2.5 bg-gray-900 border-b border-gray-800 shrink-0 z-10">
       {/* Left: logo + sidebar toggle */}
       <div className="flex items-center gap-3">
         <button
