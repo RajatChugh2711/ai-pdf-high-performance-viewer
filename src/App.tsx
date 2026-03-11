@@ -14,6 +14,7 @@ import {
   updateObjectUrl,
   markDocumentUnavailable,
 } from './features/documents/documentsSlice';
+import { Toaster } from "react-hot-toast";
 
 function AppBootstrap() {
   const dispatch = useAppDispatch();
@@ -52,6 +53,7 @@ function AppBootstrap() {
 
   return (
     <BrowserRouter>
+      <Toaster position="top-center" reverseOrder={false} />
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route

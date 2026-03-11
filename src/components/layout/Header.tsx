@@ -39,7 +39,7 @@ export function Header() {
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-full bg-gray-700 flex items-center justify-center">
               <span className="text-xs font-medium text-gray-200">
-                {user.name.charAt(0).toUpperCase()}
+                {user?.name?.charAt(0).toUpperCase()}
               </span>
             </div>
             <span className="text-sm text-gray-300 hidden sm:block">{user.name}</span>

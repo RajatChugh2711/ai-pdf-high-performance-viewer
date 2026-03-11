@@ -1,18 +1,25 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 
 export function LoginForm() {
-  const { login, status, error, dismissError } = useAuth();
-  const [email, setEmail] = useState('demo@test.com');
-  const [password, setPassword] = useState('demo123');
-
+  const { login, status, dismissError, isAuthenticated } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const navigate = useNavigate();
   const isLoading = status === 'loading';
 
-  async function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: any) {
     e.preventDefault();
     dismissError();
-    await login({ email: email.trim(), password });
+   await login({ email: email.trim(), password });
   }
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, navigate]);
 
   return (
     <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
@@ -31,16 +38,6 @@ export function LoginForm() {
 
         {/* Card */}
         <div className="bg-gray-900 rounded-2xl border border-gray-800 p-8 shadow-2xl">
-          {error && (
-            <div className="mb-4 p-3 bg-red-900/40 border border-red-700/50 rounded-lg flex items-start gap-2">
-              <svg className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <p className="text-red-300 text-sm">{error}</p>
-            </div>
-          )}
-
           <form onSubmit={(e) => { void handleSubmit(e); }} className="space-y-5">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1.5">

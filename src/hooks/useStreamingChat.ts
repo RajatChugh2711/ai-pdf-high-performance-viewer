@@ -9,7 +9,7 @@ import {
   setStreamingError,
   startStreaming,
 } from '../features/chat/chatSlice';
-import { mockAIQuery } from '../lib/mockBackend';
+import { mockDynamicAIQuery } from '@/lib/dynamicResponse';
 
 const TOKEN_INTERVAL_MS = 24; // ~60 fps feel
 const CHARS_PER_TICK = 2;    // 2 chars × 60fps ≈ 120 chars/sec — smooth, readable
@@ -48,7 +48,7 @@ export function useStreamingChat() {
       dispatch(startStreaming({ docId, messageId: assistantMessageId }));
 
       try {
-        const fullResponse = await mockAIQuery(docId, question);
+        const fullResponse = await mockDynamicAIQuery(docId, question);
 
         let charIndex = 0;
         stopStreaming();

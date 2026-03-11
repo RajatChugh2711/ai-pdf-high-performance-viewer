@@ -1,12 +1,13 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import type { AuthState, LoginCredentials, User } from '../../types';
-import { mockLogin, mockRefreshToken } from '../../lib/mockBackend';
+import { mockRefreshToken } from '../../lib/mockBackend';
 import {
   clearTokens,
   extractUserFromToken,
   storeTokens,
 } from '../../lib/tokenManager';
+import httpService from '@/services/httpService';
 
 const initialState: AuthState = {
   token: null,
@@ -21,8 +22,8 @@ export const loginThunk = createAsyncThunk(
   'auth/login',
   async (credentials: LoginCredentials, { rejectWithValue }) => {
     try {
-      const result = await mockLogin(credentials);
-      storeTokens(result.token, result.refreshToken);
+      const result: any = await httpService.post('auth/login', credentials);
+      storeTokens(result?.token, result?.token);
       return result;
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Login failed';
@@ -86,7 +87,7 @@ const authSlice = createSlice({
       .addCase(loginThunk.fulfilled, (state, action) => {
         state.token = action.payload.token;
         state.refreshToken = action.payload.refreshToken;
-        state.user = action.payload.user;
+        state.user = extractUserFromToken(action.payload.token);
         state.status = 'authenticated';
         state.sessionChecked = true;
       })
